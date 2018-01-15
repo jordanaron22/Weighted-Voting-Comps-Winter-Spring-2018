@@ -1,5 +1,5 @@
 from copy import deepcopy
-n=4 #number of voters
+n=5#number of voters
 voterList = ['A', 'B', 'C', 'D', 'E', 'F'] #ordered list of voters up to n=6
 
 
@@ -82,6 +82,7 @@ def ambiguousCoalitionDict(): ##this can be better if we remove ambigouse coalit
                     ambigI.append(format(j, '0' + str(n) + 'b')) 
         if not not ambigI:
             ambiguousCoalitions[format(i, '0' + str(n) + 'b')] = ambigI
+        print ('end Ambig Coalition')
     return ambiguousCoalitions
         
 def allCoalitions(ambiguousCoalitions):
@@ -89,26 +90,11 @@ def allCoalitions(ambiguousCoalitions):
 #    z=0
 #    y=0
     for i in range(1, 2**n):
+        print(i)
         bigEnough = True
         smallestBin = format(i, '0' + str(n) + 'b')
         smallest = Coalition()
         smallest.defineCoalitionBin(smallestBin)
-#        coalition = []
-#        print('smallest ' + str(smallest))
-#        for j in range(1, 2**n):
-#            other = Coalition()
-#            other.defineCoalitionBin(format(j, '0' + str(n) + 'b'))
-#            print('other' + str(other))
-#            if smallest < other:
-#                print ('here')
-#                if smallest.isComplement(other):
-#                    bigEnough = False
-#                    break
-#                coalition.append(other)
-#        if (not coalition in coalitionList) & (bigEnough):
-#        #if bigEnough:
-#            coalitionList.append(coalition)
-#            z = z +1
         if smallestBin in ambiguousCoalitions:
             ambig = ambiguousCoalitions[smallestBin]
         else:
@@ -136,26 +122,26 @@ def allCoalitions(ambiguousCoalitions):
                             coalition.append(other)
             if (not (coalition in coalitionList)) & (bigEnough): #if bigEnough:
                     coalitionList.append(coalition)
-#                selectCoalition = deepcopy(coalition) ##keeps the damn mutable object in place 
-#                goodSelect = True
-#                for l in range(0,m):
-#                    if select[l] == '1':
-#                        newCoalition = Coalition()
-#                        newCoalition.defineCoalitionBin(ambig[l])
-#                        for other in selectCoalition:
-#                            if (newCoalition.isComplement(other)) | (newCoalition ==other):
-#                                goodSelect=False
-#                                break
-#                        if goodSelect:
-#                            selectCoalition.append(newCoalition)
 
-#                        if (not selectCoalition in coalitionList) & (goodSelect):
-#                        #if (goodSelect):
-#                            y=y+1  
-#                            coalitionList.append(selectCoalition)
-#        print (str(z) + '+' + str(y))
     return coalitionList
-        
+    
+def getPowerDistr(coalitionList):
+    powerList = []
+    for i in range(0, len(coalitionList)):
+        coalitionSet = coalitionList[i]
+        powerTemp = [0]*n
+        for j in range(0, len(coalitionList[i])):
+            coalition = coalitionSet[j]
+            for k in range(0, n):
+                if coalition.binary[k] == '0':
+                    powerTemp[k] = powerTemp[k] - 1
+                else:
+                    powerTemp[k] = powerTemp[k] + 1
+        power = [x / sum(powerTemp) for x in powerTemp]
+    #chech if list ontains
+        powerList.append(power)
+    return powerList
+    
 def main():
 #    self = Coalition()
 #    other = Coalition()
@@ -165,15 +151,16 @@ def main():
 #    print (other == self)
 #    print (self < other)
 #    print (self.isComplement(other))
-#    print(self.isAmbiguous(other))
-    print (ambiguousCoalitionDict())  
+##    print(self.isAmbiguous(other))
+#    print (ambiguousCoalitionDict())  
     test = allCoalitions(ambiguousCoalitionDict())
-    print(len(test))
-    for i in range(0, len(test)):
-        print('.')
-        for j in range(0, len(test[i])):
-            print(test[i][j])
+#    print(len(test))
+#    for i in range(0, len(test)):
+#        print('.')
+#        for j in range(0, len(test[i])):
+#            print(test[i][j])
 
+    print(getPowerDistr(test))
 main()
 
 
