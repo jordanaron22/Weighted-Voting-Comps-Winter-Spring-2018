@@ -1,0 +1,10 @@
+## 1. Organize all the coalitions for $n$ voters into a lattice of subsets. 
+## 1a. Eliminate the coalitions tha can never win.
+## 2. Find the ambiguities for each size $k$ of coalitions.
+## 3. Start listing coalitions at the top of the list, i.e. ABCDEF...
+## 4. Go as far down the lattice as you can, adding one coalition at a time until there are no more possible 
+        winning coalitions because one is not a subset or we have run into a paradox
+## 5. Add the next coalition to the right (or the first on the next line)
+## 5a. If the next one on your list is an ambiguity, do steps 4 with 
+        first one coalition then the only the second coalition and then both coalitions
+## 6. Repeat these steps until it is impossible to add any other coalitions
