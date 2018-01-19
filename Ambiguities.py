@@ -1,4 +1,5 @@
 import itertools
+
 import networkx as nx
 
 def find_amb(coal_list, samelength = True):
@@ -69,6 +70,17 @@ def delete_losers(coal_list):
     coal_list = coal_list[1:]
     return coal_list
 
+def find_all_subsets(super_set):
+    list_of_subsets = []
+    #might need to be 1
+    for i in range(1, len(super_set)):
+        list_of_subsets.append(list(itertools.combinations(super_set, i)))
+
+    flat_list = [item for sublist in list_of_subsets for item in sublist]
+    flat_list.append(super_set)
+
+    return flat_list
+
 def create_lattice(coal_list):
     G1_forward = nx.DiGraph()
     G1_backward = nx.DiGraph()
@@ -89,58 +101,95 @@ def create_lattice(coal_list):
 
     return [G1_forward,G1_backward,G2]
 
-def find_coal(forward, backward, sideways,coal_list):
-    list_of_winning_coals = []
-    winning_coal = []
-    count = 0
+#Given digraphs and current winning coalition, finds all children 1 step below
+#needs to run multiple times to find all children of children
+def find_children(forward,backward,winning_coal):
+    list_of_children = []
+    for item in winning_coal:
+        if forward.has_node(item):
+            for key in forward[item]:
+                working_up = True
+                if backward.has_node(key):
+                    for parent in backward[key]:
+                        if parent not in winning_coal and working_up == True:
+                            working_up = False
 
+                    if working_up == True and key not in winning_coal:
+                        if key not in list_of_children:
+                            list_of_children.append(key)
+    return list_of_children
+
+#Checks if all parents reside in set
+def parent_checker(children,coal_list,backward):
+    if len(children) == 0:
+        return False
+
+    for child in children:
+        if backward.has_node(child):
+            for parents in backward[child]:
+                if parents not in coal_list:
+                    return False
+
+    return True
+
+#Returns all possible coalitions for given digraphs and all sets
+def find_coal(forward, backward, sideways,coal_list):
+
+    #list of collections
+    list_of_winning_coals = []
+
+    #this first for loop will iterate once through all possible coalitions
+    #j keeps track of where we are in the process
     for j in range(1, len(coal_list)+1):
         winning_coal = []
+        #appends everything up until and including j
         for i in range(j):
             winning_coal.append(coal_list[i])
-        #Checks iterating is working correctly
-        print("main coal",winning_coal)
 
-        working_up = True
+        #base coalition for algorithm
+        print("main coal is ", winning_coal)
 
-        for item in winning_coal:
-            print(item)
-            if forward.has_node(item):
-                print(item)
-                for key in forward[item]:
-                    print("Children ",key)
-                    if backward.has_node(key):
-                        for parent in backward[key]:
-                            #print(parent)
-                            if parent not in winning_coal and working_up == True:
-                                print("No Parent")
-                                working_up = False
-
-                        #TODO Right not only adds one child in at a time
-                        #Idea: create list of all children
-                        #then add all possible combinations
-                        if working_up == True and key not in winning_coal:
-                            print("yes parent")
-                            new_coal = list(winning_coal)
-                            new_coal.append(key)
-                            if new_coal not in list_of_winning_coals:
-                                list_of_winning_coals.append(new_coal)
-                            print("Appending new coal",new_coal)
-
-            print("appending coal", winning_coal)
-            if winning_coal not in list_of_winning_coals:
-                list_of_winning_coals.append(winning_coal)
+        #finds children 1 and 2 steps below
+        list_of_children = find_children(forward,backward,winning_coal)
+        list_of_children2 = find_children(forward,backward,list_of_children)
 
 
 
+        print("list of children is ", list_of_children)
+        print("list2 is ", list_of_children2)
 
-        #for coal in winning_coal:
-         #   for children in forward[coal]:
-          #      for parents in backward[children]:
-           #         if parents in winning_coal:
-            #            #winning_coal.append(children)
-             #           count = 0
+        #iterates through all children one step down
+        for entry in range(len(list_of_children)):
+            #holder list for adding children 1 step down
+            new_collection = []
+            #successivly adds children to holder list
+            for add_child in range(entry+1):
+                new_collection.append(list_of_children[add_child])
+            #adds parent collection to holder list
+            new_collection = winning_coal + new_collection
+            new_collection = sort_coal(new_collection)
 
+            #same logic as above, except for childrens children
+            for entry2 in range(len(list_of_children2)):
+                new_collection2 = []
+                for add_child2 in range(entry2+1):
+                    new_collection2.append(list_of_children2[entry2])
+                if parent_checker(new_collection2,new_collection,backward):
+                    new_collection2 = new_collection + new_collection2
+                    new_collection2 = sort_coal(new_collection2)
+                    if new_collection2 not in list_of_winning_coals:
+                        list_of_winning_coals.append(new_collection2)
+
+
+
+
+
+            if new_collection not in list_of_winning_coals:
+                list_of_winning_coals.append(new_collection)
+
+        winning_coal = sort_coal(winning_coal)
+        if winning_coal not in list_of_winning_coals:
+            list_of_winning_coals.append(winning_coal)
 
     return(list_of_winning_coals)
 
@@ -186,11 +235,20 @@ def main():
     sorted_list4 = sort_coal(list4)
     final_list4 = sorted_list4[:9]
     final_list4 = final_list4[1:]
+    final_list4.append("A")
+    print(final_list4)
     lattice4 = create_lattice(final_list4)
     lattice4_forward = lattice4[0]
     lattice4_backward = lattice4[1]
     lattice4_sideways = lattice4[2]
-    print(find_coal(lattice4_forward, lattice4_backward, lattice4_sideways, final_list4))
+    final_list = find_coal(lattice4_forward, lattice4_backward, lattice4_sideways, final_list4)
+
+    #final_list.sort()
+    final_list = list(final_list for final_list,_ in itertools.groupby(final_list))
+
+    for entry in final_list:
+        print(entry)
 
 
+    print(len(final_list))
 main()
