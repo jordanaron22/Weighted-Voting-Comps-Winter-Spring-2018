@@ -126,18 +126,34 @@ def parentFinder(list_of_coals, structure):
 
 
 
+def check_complement(list_of_winning_coals):
+    inds_remove = []
+    for collection in range(len(list_of_winning_coals)):
+        for index1 in range(len(list_of_winning_coals[collection])):
+            for index2 in range (index1, len(list_of_winning_coals[collection])):
+                c1 = set(list_of_winning_coals[collection][index1])
+                c2 = set(list_of_winning_coals[collection][index2])
+                if len(c1 & c2) == 0:
+                    if collection not in inds_remove:
+                        inds_remove.append(collection)
+
+    inds_remove.sort(reverse=True)
+    for entry in inds_remove:
+        del list_of_winning_coals[entry]
+
+
+    return list_of_winning_coals
+
+
 def treeTraversal(structure, layer_dict):
-    cow_list = [["ABCDE"],["ABCDE","ABCD","ABCE","ABC","ABDE","ABD","ACDE"],["ABCDE","ABCD","ABCE","ABC","ABDE","ABD"],["ABCDE","ABCD","ABCE","ABC","ABDE","ACDE"]]
-    current_layer = 6
+    #cow_list = [["ABCDE"],["ABCDE","ABCD","ABCE","ABC","ABDE","ABD","ACDE"],["ABCDE","ABCD","ABCE","ABC","ABDE","ABD"],["ABCDE","ABCD","ABCE","ABC","ABDE","ACDE"]]
+    cow_list = [["ABCDE"],["ABCDE","ABCD"]]
+    current_layer = 3
     max_layer = max(layer_dict.keys())
-    max_layer = 6
     while current_layer <= max_layer:
         parent_dict = {}
         parent_list = parentFinder(layer_dict[current_layer], structure)
         current_children = layer_dict[current_layer]
-        # print("Current layer is ", current_layer)
-        # print("Current children are ", layer_dict[current_layer])
-        # print("Current parents are ", parent_list)
         for child in current_children:
             parent_dict[child] = []
 
@@ -155,7 +171,10 @@ def treeTraversal(structure, layer_dict):
                     parent_dict[child].append(1)
                 else:
                     parent_dict[child].append(0)
-        print(parent_dict)
+
+        #########################################################
+        ##########Everything above this works correctly##########
+        #########################################################
 
         possible_coals = []
         for i in range(len(cow_list)):
@@ -171,24 +190,24 @@ def treeTraversal(structure, layer_dict):
                    temp_possible_coals.append(child)
             possible_coals.append(temp_possible_coals)
 
-        print(possible_coals)
+
 
         new_addition = []
-        for possibilities in possible_coals:
-            for i in range(len(possibilities)):
-                combo = list(itertools.combinations(possibilities,i+1))
-
+        for possibilities in range(len(possible_coals)):
+            for i in range(len(possible_coals[possibilities])):
+                combo = list(itertools.combinations(possible_coals[possibilities],i+1))
 
                 for combination in combo:
                     cleaned_combination = []
                     for element in combination:
                         cleaned_combination.append(element)
 
-                    temp_new_addition = copy.copy(cow_list[i + 1])
+                    temp_new_addition = copy.copy(cow_list[possibilities])
+                    #print("base coal is: ", temp_new_addition)
                     for coalition in cleaned_combination:
+                        #print("current coal to add is: ", coalition)
                         temp_new_addition.append(coalition)
 
-                    print(temp_new_addition,"AAAAAAAAAAAAAAAAAAAa")
 
 
                     new_addition.append(temp_new_addition)
@@ -197,45 +216,77 @@ def treeTraversal(structure, layer_dict):
             cow_list.append(addition)
 
 
-        print(len(new_addition))
+        #print(len(new_addition))
 
 
 
-
-        cow_list.append(toAppendList)
         current_layer += 1
 
     return cow_list
 
 
+def run4():
+    all_coals = create_perms(4)[1:9]
+    all_coals.append("A")
 
+    coal_dict = findBigger(all_coals)
+    structure = create_structure(all_coals, coal_dict)
+    layer_dict = calculateLayer(structure)
 
+    # 5 specific
+    layer_dict["ABCD"] = 1
 
+    layer_dict = invert_dict(layer_dict)
 
+    parent_list = parentFinder(layer_dict[2], structure)
 
-def main():
+    pre_comp = treeTraversal(structure, layer_dict)
+    print(pre_comp)
+    print(len(pre_comp))
+    print("")
+    post_comp = check_complement(pre_comp)
+    print("")
+    print(post_comp)
+    print(len(post_comp))
+
+def run5():
     all_coals = create_perms(5)
 
-    #5 specific
+    # 5 specific
     all_coals = all_coals[1:21]
     all_coals.append("A")
 
     coal_dict = findBigger(all_coals)
-    structure = create_structure(all_coals,coal_dict)
+    structure = create_structure(all_coals, coal_dict)
     layer_dict = calculateLayer(structure)
 
-    #5 specific
+    # 5 specific
     layer_dict["ABCDE"] = 1
 
     layer_dict = invert_dict(layer_dict)
 
     parent_list = parentFinder(layer_dict[2], structure)
 
+    pre_comp = treeTraversal(structure, layer_dict)
+    print(pre_comp)
+    print(len(pre_comp))
+    print("")
+    post_comp = check_complement(pre_comp)
+    print("")
+    print(post_comp)
+    print(len(post_comp))
 
-    print(treeTraversal(structure,layer_dict))
+    return post_comp
 
-    x = ["a","b"]
-    c = ["a","b","c"]
+def writeFile(cow_list, filename):
+    thefile = open('cows.txt', 'w')
+    for item in cow_list:
+        thefile.write("%s\n" % item)
+
+def main():
+    post_comp = run5()
+    writeFile(post_comp,"cow.txt")
+
 
 
 
