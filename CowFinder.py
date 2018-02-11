@@ -1,6 +1,7 @@
 import itertools
 import networkx as nx
 import copy
+import pandas as pd
 
 
 def create_perms(size):
@@ -268,24 +269,99 @@ def run5():
     parent_list = parentFinder(layer_dict[2], structure)
 
     pre_comp = treeTraversal(structure, layer_dict)
-    print(pre_comp)
-    print(len(pre_comp))
-    print("")
+    # print(pre_comp)
+    # print(len(pre_comp))
+    # print("")
     post_comp = check_complement(pre_comp)
-    print("")
-    print(post_comp)
-    print(len(post_comp))
+    # print("")
+    # print(post_comp)
+    # print(len(post_comp))
+
+    return post_comp
+
+def run6():
+    all_coals = create_perms(6)[1:48]
+    all_coals.append("A")
+
+    coal_dict = findBigger(all_coals)
+    structure = create_structure(all_coals, coal_dict)
+    layer_dict = calculateLayer(structure)
+
+    layer_dict = invert_dict(layer_dict)
+
+    parent_list = parentFinder(layer_dict[2], structure)
+
+    pre_comp = treeTraversal(structure, layer_dict)
+    # print(pre_comp)
+    # print(len(pre_comp))
+    # print("")
+    post_comp = check_complement(pre_comp)
+    # print("")
+    # print(post_comp)
+    # print(len(post_comp))
 
     return post_comp
 
 def writeFile(cow_list, filename):
-    thefile = open('cows.txt', 'w')
+    thefile = open(filename, 'w')
     for item in cow_list:
         thefile.write("%s\n" % item)
 
+def getHandCow():
+    df = pd.read_csv(r"C:\Users\jorda\PycharmProjects\Comps\cows5.csv", header=None)
+    df = df.fillna(0)
+    cow_list = []
+    for key, value in df.iterrows():
+        current_cow = []
+
+        for i in range(len(value)):
+            if value[i] != 0:
+                current_cow.append(value[i])
+
+        cow_list.append(current_cow)
+    return cow_list
+
+
+def compareLists(hand_cow,post_comp):
+    for cow in post_comp:
+        cow.sort()
+    for cow in hand_cow:
+        cow.sort()
+    post_comp.sort()
+    hand_cow.sort()
+
+    hand_cow_tuple = [tuple(lst) for lst in hand_cow]
+    post_comp_tuple = [tuple(lst) for lst in post_comp]
+
+    hand_cow_set = set(hand_cow_tuple)
+    post_comp_set = set(post_comp_tuple)
+
+
+    print(hand_cow_set.issubset(post_comp_set))
+
+    return hand_cow_set.symmetric_difference(post_comp_set)
+
+
+
+
+
 def main():
     post_comp = run5()
-    writeFile(post_comp,"cow.txt")
+    writeFile(post_comp,"cow6.txt")
+    hand_cow = getHandCow()
+
+
+    print("Cows found algorithmically")
+    print(post_comp)
+    print("")
+    print("Cows found by hand")
+    print(hand_cow)
+
+    differences = compareLists(hand_cow,post_comp)
+
+    print("")
+    print(len(differences),"cows were found to be different")
+    print(differences)
 
 
 
